@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Services/login.dart';
+import 'package:flutter_application_1/courses.dart';
+import 'package:flutter_application_1/home.dart';
 import 'package:flutter_application_1/teachers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfileScreen extends StatelessWidget {
   const UserProfileScreen({Key? key}) : super(key: key);
+
+  Future<void> logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userId');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +19,7 @@ class UserProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Profile'),
+        title: Text('الملف الشخصي'),
         automaticallyImplyLeading: true,
       ),
       body: Center(
@@ -20,15 +29,28 @@ class UserProfileScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               // Hello User Text
-              Text(
-                'Hello, User Name',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              FutureBuilder<String>(
+                  future: getUsername(),
+                  builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator(); // Show a loading spinner while waiting
+                    } else {
+                      if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        return Text(
+                          ' ${snapshot.data}, مرحبا بك',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        );
+                      }
+                    }
+                  },
+                ),
+            
               SizedBox(height: 20),
               // Button 1
               Container(
-                  height: 60.0, // This is the height of the button. Adjust this value as needed.
-
+                height: 60.0, // This is the height of the button. Adjust this value as needed.
                 width: double.infinity,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
@@ -40,12 +62,12 @@ class UserProfileScreen extends StatelessWidget {
                   ),
                   onPressed: () {
                     // Handle button 1 press here
-                     Navigator.push(
+                   Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => TeachersPage()),
-      );
+                      MaterialPageRoute(builder: (context) => CoursesPage()),
+                         );
                   },
-                  child: Text('الموادالدراسية',style: TextStyle(fontSize: 22)),
+                  child: Text('دوراتي',style: TextStyle(fontSize: 22)),
                 ),
               ),
               SizedBox(height: 20),
@@ -65,6 +87,29 @@ class UserProfileScreen extends StatelessWidget {
                     // Handle button 2 press here
                   },
                   child: Text('تواصل معنا', style: TextStyle(fontSize: 22),),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Logout Button
+              Container(
+                height: 60.0,
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.blue),
+                    backgroundColor: const Color.fromARGB(255, 241, 240, 240),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                  ),
+                  onPressed: () async {
+                    await logout();
+                    Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => Home()),
+                        );
+                  },
+                  child: Text('Logout', style: TextStyle(fontSize: 22),),
                 ),
               ),
             ],

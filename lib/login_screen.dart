@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Services/login.dart';
+import 'package:flutter_application_1/home.dart';
 import 'package:flutter_application_1/sign_up.dart';
 import 'package:flutter_application_1/user_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,36 +84,70 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
           
               // Email TextField
-             TextField(
-                
-                  textAlign: TextAlign.center, // This makes the text start from the right
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'اسم المستخدم',
-                ),
-                textDirection: TextDirection.rtl,
-                controller: usernameController,
-              ),
+             Stack(
+  alignment: Alignment.center,
+  children: [
+    TextField(
+      controller: usernameController,
+      textAlign: TextAlign.center,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+      ),
+      textDirection: TextDirection.rtl,
+    ),
+    Positioned(
+      top: 0,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        color: Colors.white,
+        child: Text(
+          'اسم المستخدم',
+          style: TextStyle(
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    ),
+  ],
+),
               SizedBox(height: 20),
               // Password TextField
                ValueListenableBuilder<bool>(
                       valueListenable: _obscureText,
                       builder: (context, value, child) {
-                        return TextField(
-                          controller: passwordController,
-                          textAlign: TextAlign.center, // This makes the text start from the right
-                          obscureText: value,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'الرقم السري',
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                value ? Icons.visibility : Icons.visibility_off,
-                              ),
-                              onPressed: _togglePasswordVisibility,
-                            ),
-                          ),
-                        );
+                        return Stack(
+  alignment: Alignment.center,
+  children: [
+    TextField(
+      controller: passwordController,
+      textAlign: TextAlign.center,
+      obscureText: value,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+        suffixIcon: IconButton(
+          icon: Icon(
+            value ? Icons.visibility : Icons.visibility_off,
+          ),
+          onPressed: _togglePasswordVisibility,
+        ),
+      ),
+      textDirection: TextDirection.rtl,
+    ),
+    Positioned(
+      top: 0,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        color: Colors.white,
+        child: Text(
+          'الرقم السري',
+          style: TextStyle(
+            color: Colors.grey,
+          ),
+        ),
+      ),
+    ),
+  ],
+);
                       },
                     ),
               SizedBox(height: 20),
@@ -175,13 +210,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           showAlert(context, "Error", "An error occurred during login.");
                         } else if (snapshot.hasData && snapshot.data != null) {
                           if (snapshot.data!['status'] == 'login-sucess') {
-                            if (snapshot.data!['s_islogin'] == '1') {
-                              showAlert(context, "تحذير", "هذا المستخدم مسجل بالفعل. في جهاز اخر");
-                            } else {
-                               saveUserData(snapshot.data!);
-                               Navigator.pushReplacementNamed(context, '/home');
-                            }
-                          } else if (snapshot.data!['status'] == 'login-faild') {
+                              saveUserData(snapshot.data!);
+                               WidgetsBinding.instance!.addPostFrameCallback((_) {
+                                   Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => Home()),
+                                  );
+                                });
+                          
+                            } else if (snapshot.data!['status'] == 'login-faild') {
                             showAlert(context, "فشل", "تأكد من بياناتك مجداا.");
                           }
                         }

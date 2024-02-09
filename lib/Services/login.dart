@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 
 Future<Map<String, dynamic>> loginUser(String username, String password) async {
@@ -19,4 +21,22 @@ Future<Map<String, dynamic>> loginUser(String username, String password) async {
   print('Response: $jsonResponse');
   // Return the whole jsonResponse object
   return jsonResponse;
+}
+
+
+Future<bool> isAuthenticated() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? userId = prefs.getString('userId');
+  return userId != null;
+}
+
+
+Future<String> getUsername() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('username') ?? 'User Name';
+}
+
+Future<String> getUserId() async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('userId') ?? '';
 }

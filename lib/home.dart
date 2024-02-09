@@ -1,12 +1,14 @@
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Services/login.dart';
 import 'package:flutter_application_1/Services/slider_service.dart';
 import 'package:flutter_application_1/courses.dart';
 import 'package:flutter_application_1/library.dart';
 import 'package:flutter_application_1/login_screen.dart';
 import 'package:flutter_application_1/offers.dart';
 import 'package:flutter_application_1/sign_up.dart';
+import 'package:flutter_application_1/user_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Home extends StatefulWidget {
@@ -52,37 +54,81 @@ class _ThirdState extends State<Home> {
         appBar: PreferredSize(
         preferredSize: Size.fromHeight(50.0), // Set this to change the AppBar height
         child: AppBar(
-        title: Center(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.5, // 50% of screen width
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () {
-                                Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                              );            },
-                  child: Text('انشاء حساب', style: TextStyle(fontSize:18)),
-                ),
-                Container(
-                  width: 100, // Set this to change the image width
-                  child: Image.asset('assets/images2/1024.png', fit: BoxFit.cover),
-                ),
-                TextButton(
-                  onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                              );            },
-                  child: Text('تسجيل الدخول',style: TextStyle(fontSize:18)),
-                ),
-              ],
-            ),
-          ),
-        ),
+  title: Center(
+    child: Container(
+      width: MediaQuery.of(context).size.width * 0.5, // 50% of screen width
+      child: FutureBuilder<bool>(
+        future: isAuthenticated(),
+        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator(); // Show a loading spinner while waiting
+          } else {
+            if (snapshot.data == true) {
+              // The user is authenticated
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CoursesPage()),
+                         );
+                    },
+                    child: Text('دوراتي', style: TextStyle(fontSize:18)),
+                  ),
+                  Container(
+                    width: 100, // Set this to change the image width
+                    child: Image.asset('assets/images2/1024.png', fit: BoxFit.cover),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                         // Handle button 1 press here
+                     Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => UserProfileScreen()),
+                         );
+                    },
+                    child: Text('حسابي',style: TextStyle(fontSize:18)),
+                  ),
+                ],
+              );
+            } else {
+              // The user is not authenticated
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                      );
+                    },
+                    child: Text('انشاء حساب', style: TextStyle(fontSize:18)),
+                  ),
+                  Container(
+                    width: 100, // Set this to change the image width
+                    child: Image.asset('assets/images2/1024.png', fit: BoxFit.cover),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
+                    },
+                    child: Text('تسجيل الدخول',style: TextStyle(fontSize:18)),
+                  ),
+                ],
+              );
+            }
+          }
+        },
       ),
+    ),
+  ),
+)
 
       ),
         body: Center(
@@ -105,58 +151,53 @@ class _ThirdState extends State<Home> {
                   FutureBuilder<List<SliderItem>>(
                     future: SliderService().fetchSliders(),
                     builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return CarouselSlider(
-                          options: CarouselOptions(
-                            height: 400,
-                            autoPlay: true,
-                            autoPlayInterval: const Duration(seconds: 5),
-                            viewportFraction: 1.0,
-                            aspectRatio: 2.0,
-                            pageSnapping: true,
-                            onPageChanged: (index, _) {},
-                            enlargeCenterPage: true,
-                          ),
-                          items: snapshot.data!.map((slider) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 0),
-                              child: SizedBox(
-                                width: 900,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(0),
-                                  child: Image.network(
-                                    slider.image,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                  ),
-                                ),
+                        if (snapshot.hasData) {
+                          return CarouselSlider(
+                            options:CarouselOptions(
+                                autoPlay: true,
+                                autoPlayInterval: const Duration(seconds: 5),
+                                  viewportFraction: 1.0, // Add this line
+                                pageSnapping: true,
+                                onPageChanged: (index, _) {},
+                                enlargeCenterPage: true,
                               ),
-                            );
-                          }).toList(),
-                        );
-                      } else if (snapshot.hasError) {
-                        return Text('${snapshot.error}');
+                            items: snapshot.data!.map((slider) {
+                              return Image.network(
+                                slider.image,
+                                fit: BoxFit.fill,
+                                width: double.infinity,
+                              );
+                            }).toList(),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text('${snapshot.error}');
+                        }
+                        return const CircularProgressIndicator();
                       }
-                      return const CircularProgressIndicator();
-                    }
                   ),
                 
                     SizedBox(height: 15),
 
-                  TextButton(
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => CoursesPage()),
-                        );
+                        context,
+                        MaterialPageRoute(builder: (context) => CoursesPage()),
+                      );
                     },
-                    child: const Text('الدورات',
-                        style: TextStyle(color: Colors.indigo, fontSize: 25)),
-                  ),
-                  Image.asset(
-                    'assets/images2/course.png',
-                    width: 200,
-                    height: 250,
+                    child: Column(
+                      children: [
+                        const Text(
+                          'الدورات',
+                          style: TextStyle(color: Colors.indigo, fontSize: 25),
+                        ),
+                        Image.asset(
+                          'assets/images2/course.png',
+                          width: 200,
+                          height: 250,
+                        ),
+                      ],
+                    ),
                   ),
                   Container(
                     width: double.infinity,
@@ -165,21 +206,27 @@ class _ThirdState extends State<Home> {
                   ),
                   SizedBox(height: 15),
 
-                  TextButton(
-                    onPressed: () {
-                       Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => OffersPage()),
-                        );
-                    },
-                    child: const Text('العروض',
-                        style: TextStyle(color: Colors.indigo, fontSize: 25)),
-                  ),
-                  Image.asset(
-                    'assets/images2/offers.png',
-                    width: 200,
-                    height: 250,
-                  ),
+                 GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => OffersPage()),
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            const Text(
+                              'العروض',
+                              style: TextStyle(color: Colors.indigo, fontSize: 25),
+                            ),
+                            Image.asset(
+                              'assets/images2/offers.png',
+                              width: 200,
+                              height: 250,
+                            ),
+                          ],
+                        ),
+                      ),
                   Container(
                     width: double.infinity,
                     color: Colors.indigoAccent,
@@ -187,21 +234,27 @@ class _ThirdState extends State<Home> {
                   ),
                   SizedBox(height: 15),
 
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => LibraryPage()),
                         );
-                    },
-                    child: const Text('المكتبة',
-                        style: TextStyle(color: Colors.indigo, fontSize: 25)),
-                  ),
-                  Image.asset(
-                    'assets/images2/files.png',
-                    width: 200,
-                    height: 250,
-                  ),
+                      },
+                      child: Column(
+                        children: [
+                          const Text(
+                            'المكتبة',
+                            style: TextStyle(color: Colors.indigo, fontSize: 25),
+                          ),
+                          Image.asset(
+                            'assets/images2/files.png',
+                            width: 200,
+                            height: 250,
+                          ),
+                        ],
+                      ),
+                    ),
                   Container(
                     width: double.infinity,
                     color: Colors.indigoAccent,
